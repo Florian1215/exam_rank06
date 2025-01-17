@@ -66,6 +66,7 @@ int main(const int argc, char **argv)
 	if (socket_fd == -1)
 		fatal_error();
 
+	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = htonl(2130706433);
 	servaddr.sin_port = htons(atoi(argv[1]));
@@ -73,7 +74,6 @@ int main(const int argc, char **argv)
 	global_id = 0;
 	max_fd = socket_fd;
 
-	bzero(&servaddr, sizeof(servaddr));
 	bzero(clients, sizeof(clients));
 
 	FD_ZERO(&read_set);
