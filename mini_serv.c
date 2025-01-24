@@ -1,12 +1,12 @@
 /* ----------------- INCLUDE ----------------- */
-#include <sys/select.h>
-#include <string.h>
-#include <unistd.h>
 #include <netdb.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 
 /* ---------------- PROTOTYPE ---------------- */
@@ -27,7 +27,7 @@ void	disconnect_client(int fd);
 struct s_clients
 {
 	int     id;
-	char    buffer[5000];
+	char    buffer[280000];
 };
 
 
@@ -37,9 +37,9 @@ typedef struct sockaddr_in	t_sockaddr_in;
 
 
 /* ------------- GLOBAL VARIABLE ------------- */
-t_clients   clients[1024];
-char        read_buffer[10000];
-char        send_buffer[10000];
+t_clients   clients[2049];
+char        read_buffer[300000];
+char        send_buffer[300000];
 fd_set		read_set;
 fd_set		write_set;
 fd_set		save_set;
@@ -47,8 +47,8 @@ int         max_fd;
 int         socket_fd;
 int         global_id;
 
-char		ARGS_ERROR[] = "Wrong number of arguments";
-char		FATAL_ERROR[] = "Fatal error";
+char		ARGS_ERROR[] = "Wrong number of arguments\n";
+char		FATAL_ERROR[] = "Fatal error\n";
 char		CLIENT_MESSAGE[] = "client %d: %s\n";
 char		NEW_CLIENT[] = "server: client %d just arrived\n";
 char		DISCONNECT_CLIENT[] = "server: client %d just left\n";
@@ -57,7 +57,7 @@ char		DISCONNECT_CLIENT[] = "server: client %d just left\n";
 /* ------------------ MAIN ------------------- */
 int main(const int argc, char **argv)
 {
-	t_sockaddr_in	servaddr;
+	t_sockaddr_in	serv_addr;
 
 	if (argc != 2)
 		exit_with_message(ARGS_ERROR);
@@ -66,10 +66,10 @@ int main(const int argc, char **argv)
 	if (socket_fd == -1)
 		fatal_error();
 
-	bzero(&servaddr, sizeof(servaddr));
-	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = htonl(2130706433);
-	servaddr.sin_port = htons(atoi(argv[1]));
+	bzero(&serv_addr, sizeof(serv_addr));
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_addr.s_addr = htonl(2130706433);
+	serv_addr.sin_port = htons(atoi(argv[1]));
 
 	global_id = 0;
 	max_fd = socket_fd;
@@ -81,7 +81,7 @@ int main(const int argc, char **argv)
 	FD_ZERO(&save_set);
 	FD_SET(socket_fd, &save_set);
 
-	if (bind(socket_fd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) != 0)
+	if (bind(socket_fd, (const struct sockaddr *)&serv_addr, sizeof(serv_addr)) != 0)
 		fatal_error();
 
 	if (listen(socket_fd, 100) != 0)
@@ -130,7 +130,7 @@ void	select_fd_event()
 
 void	connect_new_client()
 {
-	struct sockaddr_in	cli;
+	t_sockaddr_in		cli;
 	socklen_t			len = sizeof(cli);
 	const int			fd = accept(socket_fd, (struct sockaddr *)&cli, &len);
 
@@ -181,7 +181,6 @@ void	emit(const int exclude_client)
 	int			fd = 3;
 	const int	buffer_len = (int)strlen(send_buffer);
 
-	write(1, send_buffer, buffer_len);
 	while (fd <= max_fd)
 	{
 		if (FD_ISSET(fd, &write_set) && fd != socket_fd && fd != exclude_client)
@@ -201,7 +200,6 @@ void    fatal_error()
 void    exit_with_message(const char *message)
 {
 	write(2, message, strlen(message));
-	write(2, "\n", 1);
 	exit(1);
 }
 
